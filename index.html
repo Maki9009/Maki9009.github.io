@@ -4,16 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trading Dashboard</title>
-    <script>
-        // Redirect script for GitHub Pages
-        (function(){
-            const redirect = sessionStorage.redirect;
-            delete sessionStorage.redirect;
-            if (redirect && redirect !== location.href) {
-                history.replaceState(null, null, redirect);
-            }
-        })();
-    </script>
     <style>
         * {
             margin: 0;
@@ -82,9 +72,9 @@
 <body>
     <nav class="navigation">
         <div class="nav-buttons">
-            <a href="./bitcoin" class="nav-button" onclick="navigate('/bitcoin', event)">Bitcoin</a>
-            <a href="./gold" class="nav-button" onclick="navigate('/gold', event)">Gold</a>
-            <a href="./nvidia" class="nav-button" onclick="navigate('/nvidia', event)">NVIDIA</a>
+            <a href="/bitcoin" class="nav-button">Bitcoin</a>
+            <a href="/gold" class="nav-button">Gold</a>
+            <a href="/nvidia" class="nav-button">NVIDIA</a>
         </div>
     </nav>
 
@@ -169,20 +159,21 @@
         const validPages = ['bitcoin', 'gold', 'nvidia', ''];
 
         // Function to handle navigation
-        function navigate(path, event) {
-            if (event) {
-                event.preventDefault();
-            }
-            
-            // Update URL
-            history.pushState({ path }, '', path);
-            updatePage(path);
+        function handleNavigation(event) {
+            const links = document.querySelectorAll('.nav-button');
+            links.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const path = e.target.getAttribute('href');
+                    history.pushState({}, '', path);
+                    updatePage(path);
+                });
+            });
         }
 
         // Function to update page content
         function updatePage(path) {
-            // Remove leading slash and get page ID
-            const pageId = path.replace('/', '');
+            const pageId = path.replace('/', '') || 'home';
             
             // Hide all pages
             document.querySelectorAll('.page').forEach(page => {
@@ -190,7 +181,7 @@
             });
             
             // Show selected page
-            const currentPage = document.getElementById(pageId || 'home');
+            const currentPage = document.getElementById(pageId);
             if (currentPage) {
                 currentPage.classList.add('active');
             }
@@ -198,38 +189,32 @@
             // Update button states
             document.querySelectorAll('.nav-button').forEach(button => {
                 button.classList.remove('active');
-                if (button.getAttribute('href') === `.${path}`) {
+                if (button.getAttribute('href') === path) {
                     button.classList.add('active');
                 }
             });
 
             // Update page title
-            document.title = pageId ? 
+            document.title = pageId !== 'home' ? 
                 `Trading Dashboard - ${pageId.charAt(0).toUpperCase() + pageId.slice(1)}` : 
                 'Trading Dashboard';
         }
 
         // Handle browser back/forward buttons
-        window.addEventListener('popstate', (event) => {
-            const path = window.location.pathname;
-            updatePage(path);
+        window.addEventListener('popstate', () => {
+            updatePage(window.location.pathname);
         });
 
-        // Initial page load
+        // Initial setup
         document.addEventListener('DOMContentLoaded', () => {
-            // Get the path from URL, removing any base path
-            const fullPath = window.location.pathname;
-            const basePath = '/trading-dashboard'; // Change this to match your repository name if using GitHub Pages
-            const path = fullPath.replace(basePath, '');
+            handleNavigation();
             
-            // Get the page name from the path
+            const path = window.location.pathname;
             const pageName = path.replace('/', '');
             
-            // If it's a valid page, show it, otherwise show home
             if (validPages.includes(pageName)) {
                 updatePage(path);
             } else {
-                // Show 404 or home page
                 updatePage('/');
             }
         });
